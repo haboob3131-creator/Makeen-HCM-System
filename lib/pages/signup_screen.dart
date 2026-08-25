@@ -21,7 +21,7 @@ class SignUpScreen extends StatelessWidget {
               const Icon(Icons.person_add_alt_1, size: 80, color: Color(0xFF1A5F7A)),
               const SizedBox(height: 30),
               
-              // حقول الإدخال
+              
               const TextField(decoration: InputDecoration(labelText: 'الاسم الرباعي', border: OutlineInputBorder())),
               const SizedBox(height: 16),
               const TextField(decoration: InputDecoration(labelText: 'الرقم الوظيفي', border: OutlineInputBorder())),
@@ -31,14 +31,14 @@ class SignUpScreen extends StatelessWidget {
               const TextField(obscureText: true, decoration: InputDecoration(labelText: 'تأكيد كلمة المرور', border: OutlineInputBorder())),
               const SizedBox(height: 32),
               
-              // زر التسجيل (سيتم ربطه بـ Firebase لاحقاً)
+              
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: const Color(0xFF22A39F),
                 ),
                 onPressed: () {
-                  // كود إنشاء الحساب سيربط هنا
+                  
                 },
                 child: const Text('تسجيل', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),

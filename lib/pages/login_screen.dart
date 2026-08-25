@@ -36,12 +36,12 @@ class LoginScreen extends StatelessWidget {
                 },
                 child: const Text('دخول', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
-              const SizedBox(height: 16), // مسافة بين الزرين
+              const SizedBox(height: 16),
 
-// إضافة زر إنشاء حساب جديد هنا
+
 TextButton(
   onPressed: () {
-    // الانتقال إلى شاشة إنشاء الحساب
+    
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SignUpScreen()),

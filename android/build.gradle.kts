@@ -22,3 +22,12 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+subprojects {
+    project.configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.checkerframework" && requested.name == "checker-qual") {
+                useVersion("3.42.0")
+            }
+        }
+    }
+}
