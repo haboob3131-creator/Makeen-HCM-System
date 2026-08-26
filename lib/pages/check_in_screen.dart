@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CheckInScreen extends StatelessWidget {
-  const CheckInScreen({Key? key}) : super(key: key);
+  const CheckInScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

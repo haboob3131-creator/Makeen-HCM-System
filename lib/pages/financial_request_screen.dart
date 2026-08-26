@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FinancialRequestScreen extends StatelessWidget {
-  const FinancialRequestScreen({Key? key}) : super(key: key);
+  const FinancialRequestScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

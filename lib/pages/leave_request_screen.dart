@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LeaveRequestScreen extends StatelessWidget {
-  const LeaveRequestScreen({Key? key}) : super(key: key);
+  const LeaveRequestScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

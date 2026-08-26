@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 
 class ShiftScheduleScreen extends StatelessWidget {
-  const ShiftScheduleScreen({Key? key}) : super(key: key);
+  const ShiftScheduleScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

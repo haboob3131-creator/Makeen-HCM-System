@@ -6,7 +6,7 @@ import 'financial_request_screen.dart';
 import 'shift_schedule_screen.dart';
 
 class HomeDashboardScreen extends StatelessWidget {
-  const HomeDashboardScreen({Key? key}) : super(key: key);
+  const HomeDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
