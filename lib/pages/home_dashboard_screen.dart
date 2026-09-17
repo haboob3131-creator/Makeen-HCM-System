@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
 import 'check_in_screen.dart';
 import 'attendance_log_screen.dart';
 import 'leave_request_screen.dart';
@@ -8,10 +10,33 @@ import 'shift_schedule_screen.dart';
 class HomeDashboardScreen extends StatelessWidget {
   const HomeDashboardScreen({super.key});
 
+  Future<void> logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false); // مسح الدخول
+    
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    }
+  }
+      
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('مرحباً بك في مكين'), backgroundColor: const Color(0xFF1A5F7A)),
+      appBar: AppBar(
+        title: const Text('مرحباً بك في مَكِين', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1A5F7A),
+        automaticallyImplyLeading: false, // إخفاء سهم الرجوع
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () => logout(context),
+          ),
+        ],
+      ),
       body: GridView.count(
         padding: const EdgeInsets.all(16),
         crossAxisCount: 2,

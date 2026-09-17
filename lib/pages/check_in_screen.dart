@@ -1,37 +1,224 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:convert';
+import 'dart:async';
 
-class CheckInScreen extends StatelessWidget {
+class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
+
+  @override
+  State<CheckInScreen> createState() => _CheckInScreenState();
+}
+
+class _CheckInScreenState extends State<CheckInScreen> {
+  String _currentTime = '';
+  Timer? _timer;
+  
+  // إحداثيات افتراضية (صنعاء) في حال فشل الـ GPS داخل قاعة العرض
+  LatLng _currentLocation = const LatLng(15.3483, 44.2065); 
+  bool _isLoadingLocation = true;
+  final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    // تشغيل الساعة
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          final now = DateTime.now();
+          _currentTime = "${now.hour}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+        });
+      }
+    });
+
+    // محاولة جلب الموقع الفعلي فور فتح الشاشة
+    _determinePosition();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // دالة جلب الموقع الفعلي عبر الـ GPS
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() => _isLoadingLocation = false);
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() => _isLoadingLocation = false);
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      setState(() => _isLoadingLocation = false);
+      return;
+    }
+
+    // جلب الإحداثيات الفعلية بنجاح
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentLocation = LatLng(position.latitude, position.longitude);
+      _isLoadingLocation = false;
+    });
+    
+    // تحريك الخريطة للموقع الفعلي
+    _mapController.move(_currentLocation, 15.0);
+  }
+
+  // دالة حفظ التوثيق
+  Future<void> _saveAttendance(String type) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> logs = prefs.getStringList('attendance_logs') ?? [];
+    
+    final now = DateTime.now();
+    final timeString = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
+    final dateString = "${now.day}/${now.month}/${now.year}";
+    
+    // حفظ نوع التوثيق مع الإحداثيات التي تم التقاطها
+    final newRecord = {
+      "type": type,
+      "time": "$timeString - $dateString",
+      "location": "الإحداثيات: ${_currentLocation.latitude.toStringAsFixed(4)}, ${_currentLocation.longitude.toStringAsFixed(4)}", 
+    };
+    
+    logs.add(jsonEncode(newRecord));
+    await prefs.setStringList('attendance_logs', logs);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم تسجيل $type بنجاح!'), 
+          backgroundColor: type == 'حضور' ? Colors.green : Colors.red,
+          duration: const Duration(seconds: 2),
+        )
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('التوثيق الميداني'), backgroundColor: const Color(0xFF1A5F7A)),
+      appBar: AppBar(
+        title: const Text('التوثيق الميداني', style: TextStyle(color: Colors.white)), 
+        backgroundColor: const Color(0xFF1A5F7A),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ), 
       body: Column(
         children: [
+          // القسم العلوي: الخريطة التفاعلية
           Expanded(
-            child: Container(
-              color: Colors.grey[300],
-              child: const Center(child: Text('الخريطة (OpenStreetMap) سيتم إضافتها هنا')),
+            flex: 2,
+            child: Stack(
+              children: [
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: _currentLocation,
+                    initialZoom: 14.0,
+                  ),
+                  children: [
+                    // طبقة الخريطة المفتوحة (OpenStreetMap) المجانية
+                    TileLayer(
+                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c'], // يجب إضافة هذا السطر مع Carto
+                    userAgentPackageName: 'com.example.app',
+                    ),
+                    // مؤشر موقع الموظف
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: _currentLocation,
+                          width: 80,
+                          height: 80,
+                          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (_isLoadingLocation)
+                  Container(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF1A5F7A)),
+                    ),
+                  ),
+              ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(24.0),
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('الموقع الحالي: جاري جلب الإحداثيات...', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                const TextField(decoration: InputDecoration(labelText: 'ملاحظات الزيارة', border: OutlineInputBorder())),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: const Color(0xFF1A5F7A)),
-                  onPressed: () {},
-                  icon: const Icon(Icons.fingerprint, color: Colors.white),
-                  label: const Text('تأكيد الوصول (Check-In)', style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-              ],
+          
+          // القسم السفلي: الساعة وأزرار التوثيق
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _currentTime, 
+                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Color(0xFF1A5F7A))
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _isLoadingLocation ? 'جاري تحديد الموقع...' : 'تم التقاط الموقع بنجاح', 
+                    style: TextStyle(fontSize: 14, color: _isLoadingLocation ? Colors.grey : Colors.green)
+                  ),
+                  
+                  const Spacer(),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                          ),
+                          onPressed: _isLoadingLocation ? null : () => _saveAttendance("حضور"),
+                          icon: const Icon(Icons.login, color: Colors.white),
+                          label: const Text('تسجيل حضور', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                          ),
+                          onPressed: _isLoadingLocation ? null : () => _saveAttendance("انصراف"),
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          label: const Text('تسجيل انصراف', style: TextStyle(color: Colors.white, fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ],

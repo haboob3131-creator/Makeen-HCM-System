@@ -8,16 +8,15 @@ class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  _MainNavigationScreenState createState() => _MainNavigationScreenState();
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   
-  
   final List<Widget> _screens = [
     const HomeDashboardScreen(),
-    const TasksScreen(),
+    const TasksScreen(), // تأكد من وجود هذا الملف
     const NotificationsScreen(),
     const ProfileScreen(),
   ];
@@ -31,10 +30,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         selectedItemColor: const Color(0xFF1A5F7A),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'الزيارات'),
+          BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'المهام'),
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'الإشعارات'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'حسابي'),
         ],

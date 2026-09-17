@@ -1,27 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _empName = 'جاري التحميل...';
+  String _empId = '...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData(); 
+  }
+
+  Future<void> _loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _empName = prefs.getString('emp_name') ?? 'موظف تجريبي';
+      _empId = prefs.getString('emp_id') ?? '1000';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الملف الشخصي'), backgroundColor: const Color(0xFF1A5F7A)), 
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-          const CircleAvatar(
-            radius: 50,
-            backgroundColor: Color(0xFF22A39F),
-            child: Icon(Icons.person, size: 60, color: Colors.white),
-          ),
-          const SizedBox(height: 20),
-          const Text('اسم المستخدم', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const Text('مندوب مبيعات', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          const Spacer(),
-          const Text('نظام مَكِين لإدارة رأس المال البشري', style: TextStyle(color: Colors.grey)),
-          const Text('إشراف: د. عادل الحاج', style: TextStyle(color: Colors.grey, fontSize: 12)),
-          const SizedBox(height: 20),
-        ],
+      appBar: AppBar(
+        title: const Text('الملف الشخصي', style: TextStyle(color: Colors.white)), 
+        backgroundColor: const Color(0xFF1A5F7A),
+        automaticallyImplyLeading: false, // إخفاء سهم الرجوع
+      ), 
+      body: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 40),
+            const CircleAvatar(
+              radius: 50,
+              backgroundColor: Color(0xFF22A39F),
+              child: Icon(Icons.person, size: 60, color: Colors.white),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _empName, 
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A5F7A))
+            ),
+            const SizedBox(height: 5),
+            Text(
+              'الرقم الوظيفي: $_empId', 
+              style: const TextStyle(fontSize: 16, color: Colors.grey)
+            ),
+            const SizedBox(height: 30),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40),
+              child: Divider(),
+            ),
+            const Spacer(),
+            const Text('نظام مَكِين لإدارة رأس المال البشري', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('SHIPA PHARMA', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 20),
+          ],
+        ),
       )
     );
   }
