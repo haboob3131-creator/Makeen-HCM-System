@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'login_screen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -26,13 +28,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الملف الشخصي', style: TextStyle(color: Colors.white)), 
         backgroundColor: const Color(0xFF1A5F7A),
-        automaticallyImplyLeading: false, // إخفاء سهم الرجوع
+        automaticallyImplyLeading: false,
       ), 
       body: SizedBox(
         width: double.infinity,
@@ -56,6 +70,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: const TextStyle(fontSize: 16, color: Colors.grey)
             ),
             const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout),
+                  label: const Text('تسجيل الخروج'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A5F7A),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 40),
               child: Divider(),

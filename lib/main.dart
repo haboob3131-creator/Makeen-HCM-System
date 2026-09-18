@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'pages/splash_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // تم إيقاف فايربيس للعمل محلياً
-  runApp(const MakeenApp());
+  runApp(const MyApp());
 }
 
-class MakeenApp extends StatelessWidget {
-  const MakeenApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {

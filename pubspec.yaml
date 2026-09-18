@@ -39,17 +39,24 @@ dependencies:
   flutter_map:
   latlong2:
   geolocator:
+  local_auth:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -62,7 +69,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    -  assets/logo.png
+    - assets/logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
