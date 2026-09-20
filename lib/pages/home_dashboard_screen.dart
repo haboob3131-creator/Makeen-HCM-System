@@ -10,6 +10,7 @@ import 'shift_schedule_screen.dart';
 class HomeDashboardScreen extends StatelessWidget {
   const HomeDashboardScreen({super.key});
 
+  // تسجيل خروج المستخدم وتصفية حالة الدخول من الهاتف
   Future<void> logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false); // مسح الدخول
@@ -23,6 +24,7 @@ class HomeDashboardScreen extends StatelessWidget {
     }
   }
       
+  // بناء اللوحة الرئيسية للمستخدم بها أزرار الوصول إلى أقسام التطبيق
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,6 +55,7 @@ class HomeDashboardScreen extends StatelessWidget {
     );
   }
 
+  // إنشاء بطاقة لكل قسم رئيسي في الشاشة الرئيسية
   Widget _buildActionCard(BuildContext context, String title, IconData icon, Widget targetScreen) {
     return InkWell(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => targetScreen)),

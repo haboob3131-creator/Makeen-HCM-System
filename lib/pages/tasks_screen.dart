@@ -11,16 +11,20 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
+  // قائمة الزيارات الميدانية المحفوظة داخل التطبيق
   List<Map<String, dynamic>> _visits = [];
-  bool _isLocating = false; // متغير لإظهار حالة التحميل أثناء البحث عن الموقع
 
+  // يحدد ما إذا كان التطبيق الآن جالبًا للموقع أو في حالة انتظار
+  bool _isLocating = false;
+
+  // تهيئة الشاشة وتحميل الزيارات المحفوظة عند فتحها
   @override
   void initState() {
     super.initState();
-    _loadVisits(); // تحميل الزيارات المحفوظة مسبقاً
+    _loadVisits();
   }
 
-  // 1. جلب الزيارات المحفوظة من الذاكرة
+  // جلب الزيارات المحفوظة من ذاكرة الهاتف
   Future<void> _loadVisits() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedVisits = prefs.getStringList('field_visits') ?? [];
@@ -29,16 +33,33 @@ class _TasksScreenState extends State<TasksScreen> {
     });
   }
 
-  // 2. دالة جلب الموقع عند الضغط على الزر
+  // هذه الدالة تبدأ زيارة جديدة عن طريق جلب الموقع الحالي من GPS
   Future<void> _startNewVisit() async {
     setState(() => _isLocating = true); // إظهار مؤشر التحميل
 
     // فحص صلاحيات الموقع
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (!mounted) return;
+      setState(() => _isLocating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى تفعيل خدمة الموقع في الهاتف'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
     LocationPermission permission = await Geolocator.checkPermission();
-    
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever || permission == LocationPermission.denied) {
+      if (!mounted) return;
+      setState(() => _isLocating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم رفض صلاحية الموقع. قم بتفعيلها من إعدادات الهاتف'), backgroundColor: Colors.orange),
+      );
+      return;
     }
 
     double lat = 15.3483; // إحداثيات افتراضية (صنعاء) في حال فشل الـ GPS
@@ -46,11 +67,16 @@ class _TasksScreenState extends State<TasksScreen> {
 
     try {
       // محاولة جلب الموقع الحقيقي بحد أقصى 5 ثوانٍ لكي لا يطول الانتظار في العرض
-      Position position = await Geolocator.getCurrentPosition(timeLimit: const Duration(seconds: 5));
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
       lat = position.latitude;
       lng = position.longitude;
     } catch (e) {
-      debugPrint("فشل في جلب الموقع، سيتم استخدام الإحداثيات الافتراضية");
+      debugPrint('فشل في جلب الموقع، سيتم استخدام الإحداثيات الافتراضية');
     }
 
     setState(() => _isLocating = false); // إخفاء مؤشر التحميل
@@ -61,7 +87,7 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  // 3. النافذة المنبثقة لإدخال اسم المحل والملاحظات
+  // نافذة منبثقة لإدخال اسم المحل والملاحظات على الزيارة
   void _showVisitFormDialog(double lat, double lng) {
     final TextEditingController storeNameController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
@@ -140,7 +166,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  // 4. حفظ بيانات الزيارة في الذاكرة
+  // حفظ بيانات الزيارة في التخزين المحلي داخل الهاتف
   Future<void> _saveVisitData(String storeName, String notes, double lat, double lng) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedVisits = prefs.getStringList('field_visits') ?? [];
@@ -162,6 +188,7 @@ class _TasksScreenState extends State<TasksScreen> {
     _loadVisits(); // تحديث القائمة فوراً
   }
 
+  // بناء شاشة الزيارات الميدانية مع زر إضافة جديدة وقائمة المحفوظات
   @override
   Widget build(BuildContext context) {
     return Scaffold(

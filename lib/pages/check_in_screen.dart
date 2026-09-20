@@ -14,14 +14,22 @@ class CheckInScreen extends StatefulWidget {
 }
 
 class _CheckInScreenState extends State<CheckInScreen> {
+  // الوقت الحالي الذي سيتم عرضه في الشاشة
   String _currentTime = '';
+
+  // Timer لتحديث الساعة كل ثانية
   Timer? _timer;
-  
+
   // إحداثيات افتراضية (صنعاء) في حال فشل الـ GPS داخل قاعة العرض
-  LatLng _currentLocation = const LatLng(15.3483, 44.2065); 
+  LatLng _currentLocation = const LatLng(15.3483, 44.2065);
+
+  // حالة تحميل الموقع الحالية
   bool _isLoadingLocation = true;
+
+  // وحدة التحكم بالخريطة لتحديث موقع المستخدم على الخريطة
   final MapController _mapController = MapController();
 
+  // تهيئة الشاشة عند فتحها
   @override
   void initState() {
     super.initState();
@@ -45,7 +53,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     super.dispose();
   }
 
-  // دالة جلب الموقع الفعلي عبر الـ GPS
+  // هذه الدالة تقوم بجلب الموقع الفعلي عبر GPS وتحديث الخريطة
   Future<void> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -81,7 +89,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     _mapController.move(_currentLocation, 15.0);
   }
 
-  // دالة حفظ التوثيق
+  // هذه الدالة تحفظ سجل الحضور أو الانصراف داخل الهاتف مع الموقع والوقت
   Future<void> _saveAttendance(String type) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> logs = prefs.getStringList('attendance_logs') ?? [];
@@ -111,6 +119,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
   }
 
+  // بناء واجهة التوثيق الميداني
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -8,12 +8,14 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  // قائمة الإشعارات الحالية التي ستظهر للمستخدم
   List<Map<String, dynamic>> notifications = [
     {"id": "1", "title": "تمت الموافقة على السلفة", "body": "قام المدير المالي باعتماد طلب السلفة الخاص بك.", "time": "منذ ساعتين", "icon": Icons.check_circle, "color": Colors.green},
     {"id": "2", "title": "إشعار راتب جديد", "body": "تم إصدار مسير الرواتب لشهر أغسطس. يمكنك الاطلاع عليه الآن.", "time": "أمس", "icon": Icons.account_balance_wallet, "color": const Color(0xFF1A5F7A)},
     {"id": "3", "title": "تذكير بجدول الورديات", "body": "وردتك غداً تبدأ الساعة 8:00 صباحاً. يرجى الالتزام بالموعد.", "time": "منذ 3 أيام", "icon": Icons.access_time, "color": Colors.orange},
   ];
 
+  // بناء واجهة الإشعارات مع إمكانية حذف كل إشعار
   @override
   Widget build(BuildContext context) {
     return Scaffold(

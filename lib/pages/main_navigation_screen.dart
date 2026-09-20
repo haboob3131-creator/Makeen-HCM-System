@@ -12,15 +12,18 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  // الفهرس الحالي للصفحة النشطة في شريط التنقل السفلي
   int _currentIndex = 0;
-  
+
+  // قائمة الشاشات المتاحة في شريط التنقل السفلي
   final List<Widget> _screens = [
     const HomeDashboardScreen(),
-    const TasksScreen(), // تأكد من وجود هذا الملف
+    const TasksScreen(),
     const NotificationsScreen(),
     const ProfileScreen(),
   ];
 
+  // بناء شريط التنقل السفلي الرئيسي
   @override
   Widget build(BuildContext context) {
     return Scaffold(

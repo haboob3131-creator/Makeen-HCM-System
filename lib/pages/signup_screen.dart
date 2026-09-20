@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_navigation_screen.dart';
@@ -10,26 +12,87 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  // حقول إنشاء الحساب الجديدة
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _empIdController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  // هذه الدالة تنفذ إنشاء الحساب وتخزينه في الهاتف محليًا
   Future<void> _signUp() async {
-    if (_nameController.text.isEmpty || _empIdController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى تعبئة جميع الحقول'), backgroundColor: Colors.red));
+    final name = _nameController.text.trim();
+    final empId = _empIdController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    // التحقق من تعبئة جميع الحقول قبل إنشاء الحساب
+    if (name.isEmpty || empId.isEmpty || email.isEmpty || password.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى تعبئة جميع الحقول'), backgroundColor: Colors.red),
+      );
       return;
     }
-    
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('كلمتي المرور غير متطابقتين!'), backgroundColor: Colors.red));
+
+    if (!email.contains('@')) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال بريد إلكتروني صحيح'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب أن تكون كلمة المرور 6 أحرف على الأقل'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('كلمتي المرور غير متطابقتين!'), backgroundColor: Colors.red),
+      );
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
+
+    // قراءة قائمة الحسابات المسجلة الحالية من التخزين المحلي
+    final savedAccounts = prefs.getStringList('registered_accounts') ?? <String>[];
+    final hasExistingAccount = savedAccounts.any((entry) {
+      final decoded = jsonDecode(entry) as Map<String, dynamic>;
+      return (decoded['email'] as String? ?? '').toLowerCase() == email.toLowerCase();
+    });
+
+    if (hasExistingAccount) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هذا البريد الإلكتروني مسجل بالفعل'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    // بناء كائن الحساب الجديد
+    final newAccount = {
+      'name': name,
+      'empId': empId,
+      'email': email.toLowerCase(),
+      'password': password,
+    };
+
+    // حفظ الحساب داخل قائمة الحسابات المسجلة محليًا
+    savedAccounts.add(jsonEncode(newAccount));
+    await prefs.setStringList('registered_accounts', savedAccounts);
     await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('emp_name', _nameController.text);
-    await prefs.setString('emp_id', _empIdController.text);
+    await prefs.setBool('biometricLoginEnabled', false);
+    await prefs.setString('emp_name', name);
+    await prefs.setString('emp_id', empId);
+    await prefs.setString('logged_in_email', email.toLowerCase());
 
     if (mounted) {
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainNavigationScreen()), (_) => false);
@@ -40,6 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _nameController.dispose();
     _empIdController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -60,6 +124,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'الاسم الرباعي', border: OutlineInputBorder())),
               const SizedBox(height: 16),
               TextField(controller: _empIdController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الرقم الوظيفي', border: OutlineInputBorder())),
+              const SizedBox(height: 16),
+              TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder())),
               const SizedBox(height: 16),
               TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder())),
               const SizedBox(height: 16),

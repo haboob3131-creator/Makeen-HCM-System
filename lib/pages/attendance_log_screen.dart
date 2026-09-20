@@ -10,14 +10,17 @@ class AttendanceLogScreen extends StatefulWidget {
 }
 
 class _AttendanceLogScreenState extends State<AttendanceLogScreen> {
+  // قائمة سجل الحضور والانصراف الحالية
   List<Map<String, dynamic>> _logs = [];
 
+  // تهيئة الشاشة وتحميل البيانات عند فتحها
   @override
   void initState() {
     super.initState();
     _loadLogs();
   }
 
+  // هذه الدالة تسترجع السجلات المحفوظة محليًا من الهاتف
   Future<void> _loadLogs() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedLogs = prefs.getStringList('attendance_logs') ?? [];
@@ -26,6 +29,7 @@ class _AttendanceLogScreenState extends State<AttendanceLogScreen> {
     });
   }
 
+  // بناء واجهة عرض سجل الحضور والانصراف
   @override
   Widget build(BuildContext context) {
     return Scaffold(

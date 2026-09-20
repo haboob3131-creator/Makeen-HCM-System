@@ -13,10 +13,16 @@ class BiometricAuthScreen extends StatefulWidget {
 }
 
 class _BiometricAuthScreenState extends State<BiometricAuthScreen> {
+  // كائن التحقق البيومتري من مكتبة local_auth
   final LocalAuthentication _auth = LocalAuthentication();
+
+  // حالة التحقق الحالية، لتمنع تنفيذ أكثر من محاولة تحقق في نفس الوقت
   bool _isAuthenticating = false;
+
+  // رسالة الحالة الحالية للواجهة، مثل: جاري التحقق، تم النجاح، أو فشل التحقق
   String _authStatus = 'جاري التحقق من البصمة...';
 
+  // يتم تشغيل التحقق بشكل تلقائي عند فتح شاشة البصمة
   @override
   void initState() {
     super.initState();
@@ -25,6 +31,7 @@ class _BiometricAuthScreenState extends State<BiometricAuthScreen> {
     });
   }
 
+  // هذه الدالة تقوم بفحص دعم الجهاز للبصمة ثم تنفيذ التحقق البيومتري
   Future<void> _authenticate() async {
     if (_isAuthenticating) return;
 
@@ -34,10 +41,12 @@ class _BiometricAuthScreenState extends State<BiometricAuthScreen> {
     });
 
     try {
+      // التحقق من أن الجهاز يدعم البصمة أو أن قفل الشاشة مهيأ
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
       final bool isDeviceSupported = await _auth.isDeviceSupported();
       final bool canAuthenticate = canAuthenticateWithBiometrics || isDeviceSupported;
 
+      // إذا لم يدعم الجهاز البصمة أو لم يتم إعداد شاشة القفل، نوقف العملية
       if (!canAuthenticate) {
         if (!mounted) return;
         setState(() {
@@ -47,6 +56,7 @@ class _BiometricAuthScreenState extends State<BiometricAuthScreen> {
         return;
       }
 
+      // تنفيذ التحقق الفعلي للبصمة أو الوجه حسب الجهاز
       final bool authenticated = await _auth.authenticate(
         localizedReason: 'الرجاء التحقق من هويتك لتسجيل الدخول',
         biometricOnly: false,
@@ -60,6 +70,7 @@ class _BiometricAuthScreenState extends State<BiometricAuthScreen> {
         _authStatus = authenticated ? 'تم التحقق بنجاح!' : 'فشل التحقق من البصمة';
       });
 
+      // إذا نجح التحقق، يتم حفظ حالة الدخول المحلية داخل الهاتف
       if (authenticated) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);

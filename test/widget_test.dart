@@ -20,9 +20,11 @@ void main() {
     expect(find.byType(SplashScreen), findsOneWidget);
   });
 
-  testWidgets('login screen shows biometric login option', (WidgetTester tester) async {
+  testWidgets('login screen supports either real account login or biometric login after real account creation', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
 
+    expect(find.text('تسجيل الدخول'), findsOneWidget);
     expect(find.text('تسجيل الدخول بالبصمة'), findsOneWidget);
+    expect(find.text('ليس لديك حساب؟ إنشاء حساب جديد'), findsOneWidget);
   });
 }

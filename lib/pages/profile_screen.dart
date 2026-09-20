@@ -11,15 +11,20 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // اسم الموظف الحالي
   String _empName = 'جاري التحميل...';
+
+  // الرقم الوظيفي للموظف
   String _empId = '...';
 
+  // تهيئة الشاشة وقراءة بيانات الملف الشخصي من التخزين المحلي
   @override
   void initState() {
     super.initState();
     _loadProfileData(); 
   }
 
+  // جلب بيانات اسم الموظف والرقم الوظيفي من الهاتف
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -28,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  // تسجيل الخروج من التطبيق وإزالة حالة الدخول المحفوظة
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
@@ -40,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // بناء واجهة الملف الشخصي مع زر الخروج
   @override
   Widget build(BuildContext context) {
     return Scaffold(

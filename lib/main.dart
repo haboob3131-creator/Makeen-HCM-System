@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'pages/splash_screen.dart';
 
+// نقطة الدخول الرئيسية للتطبيق
+// هنا يتم تهيئة Flutter وتشغيل التطبيق بالكامل
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
+// التطبيق الرئيسي
+// هذا Widget يحدد السمة العامة للتطبيق، الاتجاه العربي، والصفحة الابتدائية
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // بناء الجذر الرئيسي للتطبيق
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

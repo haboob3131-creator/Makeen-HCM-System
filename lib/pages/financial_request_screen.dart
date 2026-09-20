@@ -10,17 +10,24 @@ class FinancialRequestScreen extends StatefulWidget {
 }
 
 class _FinancialRequestScreenState extends State<FinancialRequestScreen> {
+  // حقول إدخال المبلغ والغرض
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
+
+  // نوع الطلب المالي المختار
   String _selectedType = 'سلفة';
+
+  // قائمة الطلبات المالية السابقة
   List<Map<String, dynamic>> _myFinancials = [];
 
+  // تهيئة الشاشة وتحميل الطلبات السابقة
   @override
   void initState() {
     super.initState();
     _loadFinancials(); 
   }
 
+  // جلب الطلبات المالية المحفوظة داخل الهاتف
   Future<void> _loadFinancials() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedData = prefs.getStringList('financial_requests') ?? [];
@@ -29,15 +36,17 @@ class _FinancialRequestScreenState extends State<FinancialRequestScreen> {
     });
   }
 
+  // إرسال طلب مالي جديد وتخزينه محليًا
   Future<void> _submitRequest() async {
     if (_amountController.text.isEmpty || _reasonController.text.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الرجاء إدخال المبلغ والغرض'), backgroundColor: Colors.red));
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     List<String> logs = prefs.getStringList('financial_requests') ?? [];
-    
+
     final newReq = {
       "type": _selectedType,
       "amount": _amountController.text,
@@ -45,18 +54,18 @@ class _FinancialRequestScreenState extends State<FinancialRequestScreen> {
       "date": "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
       "status": "قيد المراجعة"
     };
-    
+
     logs.add(jsonEncode(newReq));
     await prefs.setStringList('financial_requests', logs);
-    
+
     _amountController.clear();
     _reasonController.clear();
+    if (!mounted) return;
     FocusScope.of(context).unfocus();
     _loadFinancials();
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفع الطلب المالي بنجاح'), backgroundColor: Colors.green));
-    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفع الطلب المالي بنجاح'), backgroundColor: Colors.green));
   }
 
   @override
@@ -66,6 +75,7 @@ class _FinancialRequestScreenState extends State<FinancialRequestScreen> {
     super.dispose();
   }
 
+  // بناء واجهة الطلبات المالية
   @override
   Widget build(BuildContext context) {
     return Scaffold(

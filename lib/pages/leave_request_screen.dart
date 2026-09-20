@@ -10,16 +10,23 @@ class LeaveRequestScreen extends StatefulWidget {
 }
 
 class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
+  // حقل سبب الإجازة
   final TextEditingController _reasonController = TextEditingController();
+
+  // نوع الإجازة المختار
   String _selectedType = 'إجازة سنوية';
+
+  // قائمة طلبات الإجازة السابقة
   List<Map<String, dynamic>> _myLeaves = [];
 
+  // تهيئة الشاشة وتحميل طلبات الإجازة
   @override
   void initState() {
     super.initState();
     _loadLeaves(); 
   }
 
+  // جلب طلبات الإجازة المحفوظة محليًا
   Future<void> _loadLeaves() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedLeaves = prefs.getStringList('leave_requests') ?? [];
@@ -28,32 +35,34 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     });
   }
 
+  // إرسال طلب إجازة جديد وتخزينه داخل الهاتف
   Future<void> _submitLeave() async {
     if (_reasonController.text.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الرجاء كتابة سبب الإجازة'), backgroundColor: Colors.red));
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     List<String> logs = prefs.getStringList('leave_requests') ?? [];
-    
+
     final newLeave = {
       "type": _selectedType,
       "reason": _reasonController.text,
       "date": "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
       "status": "قيد المراجعة"
     };
-    
+
     logs.add(jsonEncode(newLeave));
     await prefs.setStringList('leave_requests', logs);
-    
+
     _reasonController.clear();
-    FocusScope.of(context).unfocus(); 
-    _loadLeaves(); 
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الإجازة بنجاح'), backgroundColor: Colors.green));
-    }
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
+    _loadLeaves();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الإجازة بنجاح'), backgroundColor: Colors.green));
   }
 
   @override
@@ -62,6 +71,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     super.dispose();
   }
 
+  // بناء واجهة طلبات الإجازات
   @override
   Widget build(BuildContext context) {
     return Scaffold(

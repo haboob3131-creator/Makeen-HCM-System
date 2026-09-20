@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class ShiftScheduleScreen extends StatelessWidget {
   const ShiftScheduleScreen({super.key});
 
+  // بناء شاشة جدول الورديات وعرض قائمة الورديات القادمة واليوم الحالي
   @override
   Widget build(BuildContext context) {
     final List<Map<String, String>> shifts = [

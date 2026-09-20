@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../local_auth.dart';
 import 'login_screen.dart';
-import 'main_navigation_screen.dart'; 
+import 'main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,11 +13,13 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  // Timer يقوم بتأخير التحقق لبضع ثوانٍ حتى تظهر شاشة البداية
   Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
+    // بعد 3 ثوانٍ، يتم تحديد الصفحة المناسبة
     _navigationTimer = Timer(const Duration(seconds: 3), _checkLoginAndNavigate);
   }
 
@@ -28,25 +29,25 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
+  // هذه الدالة تحدد الصفحة المناسبة عند فتح التطبيق
   Future<void> _checkLoginAndNavigate() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // قراءة حالة الدخول الحالية من التخزين المحلي
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     final biometricEnabled = prefs.getBool('biometricLoginEnabled') ?? false;
+    final hasRealAccount = (prefs.getStringList('registered_accounts') ?? const <String>[]).isNotEmpty;
 
     if (mounted) {
+      // إذا كان المستخدم قد سجل دخول فعليًا، انتقل إلى الصفحة الرئيسية
       if (isLoggedIn) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainNavigationScreen()));
-      } else if (biometricEnabled) {
-        final localAuth = LocalAuthentication();
-        final canUseBiometrics = await localAuth.canCheckBiometrics;
-        final isSupported = await localAuth.isDeviceSupported();
-
-        if (canUseBiometrics || isSupported) {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const BiometricAuthScreen()));
-        } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-        }
+      }
+      // إذا لم يكن مسجل دخول ولكن تم تفعيل البصمة وكان هناك حساب فعلي، انتقل إلى شاشة البصمة
+      else if (biometricEnabled && hasRealAccount) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const BiometricAuthScreen()));
       } else {
+        // إذا لم توجد حالة دخول، يتم توجيه المستخدم إلى شاشة تسجيل الدخول
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
       }
     }
