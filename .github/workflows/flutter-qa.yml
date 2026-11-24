@@ -1,0 +1,121 @@
+name: Makeen Flutter Quality Gate
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  flutter-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Unit and widget tests
+        run: flutter test test --coverage --reporter expanded
+      - name: Build Flutter web
+        run: flutter build web --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web
+
+  playwright:
+    needs: flutter-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Launch isolated web app
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory build/web > /tmp/makeen-web.log 2>&1 &
+          for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:8000/ >/dev/null; then exit 0; fi; sleep 1; done
+          cat /tmp/makeen-web.log; exit 1
+      - run: npm run test:e2e
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+  k6-static-smoke:
+    needs: flutter-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web
+      - name: Launch isolated static web server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory build/web > /tmp/makeen-k6.log 2>&1 &
+          for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:8000/ >/dev/null; then exit 0; fi; sleep 1; done
+          cat /tmp/makeen-k6.log; exit 1
+      - uses: grafana/setup-k6-action@v1
+      - run: mkdir -p test-results && k6 run --summary-export=test-results/k6-summary.json performance/flutter_static.js
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: test-results
+          if-no-files-found: ignore
+
+  android-device-integration:
+    needs: flutter-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          script: flutter test integration_test/auth_journey_test.dart -d emulator-5554
+
+  package-qa-build:
+    needs:
+      - flutter-tests
+      - playwright
+      - k6-static-smoke
+      - android-device-integration
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: makeen-qa-debug-apk-not-for-production
+          path: build/app/outputs/flutter-apk/app-debug.apk
