@@ -1,0 +1,10 @@
+{
+  "name": "makeen-flutter-web-smoke",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test -c playwright.config.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  }
+}
